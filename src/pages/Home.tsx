@@ -37,6 +37,20 @@ export default function Home() {
     <div className="min-h-screen bg-gray-50 pb-24">
       {/* Hero Banner */}
       <section className="relative h-[80vh] min-h-[600px] flex items-center justify-center overflow-hidden">
+        {/* Header / Logo */}
+        <div className="absolute top-0 left-0 right-0 p-6 z-20 max-w-7xl mx-auto flex justify-between items-center">
+          {banner?.logoUrl && (
+            <motion.img 
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              src={banner.logoUrl} 
+              alt="Logo" 
+              className="h-10 md:h-14 object-contain" 
+              referrerPolicy="no-referrer"
+            />
+          )}
+        </div>
+
         <div className="absolute inset-0">
           <img 
             src={banner?.imageUrl || 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?q=80&w=2070&auto=format&fit=crop'} 

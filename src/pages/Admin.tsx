@@ -281,6 +281,30 @@ export default function Admin() {
             {activeTab === 'banner' && (
               <div className="space-y-4">
                 <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Logo trang web</label>
+                  <div className="flex items-start space-x-4">
+                    {data.banner.logoUrl ? (
+                      <img src={data.banner.logoUrl} alt="Logo preview" className="w-32 h-16 object-contain rounded-lg border border-gray-200 bg-gray-50 p-2" />
+                    ) : (
+                      <div className="w-32 h-16 rounded-lg border border-dashed border-gray-300 bg-gray-50 flex items-center justify-center text-gray-400 text-sm">Chưa có logo</div>
+                    )}
+                    <div className="flex-1">
+                      <input
+                        type="text"
+                        value={data.banner.logoUrl || ''}
+                        onChange={e => handleChange('banner', 'logoUrl', e.target.value)}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg mb-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        placeholder="URL logo hoặc tải lên"
+                      />
+                      <label className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 cursor-pointer">
+                        <ImageIcon className="w-4 h-4 mr-2" />
+                        Tải logo lên
+                        <input type="file" className="hidden" accept="image/*" onChange={e => handleImageUpload(e, 'banner', 'logoUrl')} />
+                      </label>
+                    </div>
+                  </div>
+                </div>
+                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Tiêu đề</label>
                   <input
                     type="text"
