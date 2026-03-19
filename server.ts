@@ -112,7 +112,8 @@ app.delete('/api/admin/gallery/:id', authenticate, (req, res) => {
 });
 
 async function startServer() {
-  const PORT = 3000;
+  // cPanel Passenger sẽ tự động truyền port qua process.env.PORT
+  const PORT = process.env.PORT || 3000;
 
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({
