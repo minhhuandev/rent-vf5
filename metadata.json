@@ -1,0 +1,5 @@
+{
+  "name": "VinFast VF5 Rental",
+  "description": "A single-page web application for renting a VinFast VF5 car, featuring a public landing page and an admin dashboard.",
+  "requestFramePermissions": []
+}
