@@ -70,6 +70,10 @@ app.post('/api/admin/login', (req, res) => {
   res.json({ token });
 });
 
+app.get('/api/admin/verify', authenticate, (req, res) => {
+  res.json({ valid: true });
+});
+
 app.put('/api/admin/content', authenticate, (req, res) => {
   const updates = req.body; // { banner: {...}, intro: {...} }
   const stmt = db.prepare('UPDATE content SET value = ? WHERE key = ?');

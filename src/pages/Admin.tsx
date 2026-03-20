@@ -24,6 +24,15 @@ export default function Admin() {
       return;
     }
 
+    fetch('/api/admin/verify', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    }).then(res => {
+      if (!res.ok) {
+        localStorage.removeItem('token');
+        navigate('/login');
+      }
+    }).catch(() => {});
+
     fetch('/api/public-data')
       .then(res => res.json())
       .then(resData => {
@@ -110,6 +119,7 @@ export default function Admin() {
         handleChange(section, field, url);
         showNotification('Tải ảnh lên thành công!', 'success');
       } else {
+        if (res.status === 401) return handleLogout();
         showNotification('Lỗi khi tải ảnh lên', 'error');
       }
     } catch (err) {
@@ -154,8 +164,12 @@ export default function Admin() {
             gallery: [...prev.gallery, newImg]
           }));
           showNotification('Thêm ảnh vào thư viện thành công!', 'success');
+        } else {
+          if (galleryRes.status === 401) return handleLogout();
+          showNotification('Lỗi khi thêm ảnh vào thư viện', 'error');
         }
       } else {
+        if (res.status === 401) return handleLogout();
         showNotification('Lỗi khi tải ảnh lên', 'error');
       }
     } catch (err) {
@@ -182,6 +196,7 @@ export default function Admin() {
         }));
         showNotification('Đã xóa ảnh', 'success');
       } else {
+        if (res.status === 401) return handleLogout();
         showNotification('Lỗi khi xóa ảnh', 'error');
       }
     } catch (err) {
@@ -214,6 +229,7 @@ export default function Admin() {
         setNewReview({ customerName: '', rating: 5, comment: '', avatarUrl: '' });
         showNotification('Thêm đánh giá thành công!', 'success');
       } else {
+        if (res.status === 401) return handleLogout();
         showNotification('Lỗi khi thêm đánh giá', 'error');
       }
     } catch (err) {
@@ -238,6 +254,7 @@ export default function Admin() {
         }));
         showNotification('Đã xóa đánh giá', 'success');
       } else {
+        if (res.status === 401) return handleLogout();
         showNotification('Lỗi khi xóa đánh giá', 'error');
       }
     } catch (err) {
@@ -263,6 +280,7 @@ export default function Admin() {
         setNewReview(prev => ({ ...prev, avatarUrl: url }));
         showNotification('Tải ảnh đại diện thành công!', 'success');
       } else {
+        if (res.status === 401) return handleLogout();
         showNotification('Lỗi khi tải ảnh lên', 'error');
       }
     } catch (err) {
