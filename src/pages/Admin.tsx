@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LogOut, Save, Image as ImageIcon, Plus, Trash2, CheckCircle2, XCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -10,11 +10,41 @@ export default function Admin() {
   const [activeTab, setActiveTab] = useState('banner');
   const [notification, setNotification] = useState<{message: string, type: 'success' | 'error'} | null>(null);
   const [newReview, setNewReview] = useState({ customerName: '', rating: 5, comment: '', avatarUrl: '' });
+  const [rentals, setRentals] = useState<any[]>([]);
+  const [editingRental, setEditingRental] = useState<any>(null);
+  const [isRentalModalOpen, setIsRentalModalOpen] = useState(false);
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {}
+  });
   const navigate = useNavigate();
 
   const showNotification = (message: string, type: 'success' | 'error' = 'success') => {
     setNotification({ message, type });
     setTimeout(() => setNotification(null), 3000);
+  };
+
+  const fetchRentals = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    try {
+      const res = await fetch('/api/admin/rentals', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setRentals(data);
+      }
+    } catch (err) {
+      console.error('Failed to load rentals', err);
+    }
   };
 
   useEffect(() => {
@@ -43,6 +73,8 @@ export default function Admin() {
         console.error('Failed to load data', err);
         setLoading(false);
       });
+
+    fetchRentals();
   }, [navigate]);
 
   const handleLogout = () => {
@@ -178,30 +210,36 @@ export default function Admin() {
   };
 
   const handleDeleteGalleryImage = async (id: number) => {
-    if (!confirm('Bạn có chắc muốn xóa ảnh này?')) return;
-    
-    try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`/api/admin/gallery/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
+    setConfirmModal({
+      isOpen: true,
+      title: 'Xác nhận xóa',
+      message: 'Bạn có chắc muốn xóa ảnh này?',
+      onConfirm: async () => {
+        try {
+          const token = localStorage.getItem('token');
+          const res = await fetch(`/api/admin/gallery/${id}`, {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          
+          if (res.ok) {
+            setData((prev: any) => ({
+              ...prev,
+              gallery: prev.gallery.filter((img: any) => img.id !== id)
+            }));
+            showNotification('Đã xóa ảnh', 'success');
+          } else {
+            if (res.status === 401) return handleLogout();
+            showNotification('Lỗi khi xóa ảnh', 'error');
+          }
+        } catch (err) {
+          showNotification('Lỗi kết nối mạng', 'error');
         }
-      });
-      
-      if (res.ok) {
-        setData((prev: any) => ({
-          ...prev,
-          gallery: prev.gallery.filter((img: any) => img.id !== id)
-        }));
-        showNotification('Đã xóa ảnh', 'success');
-      } else {
-        if (res.status === 401) return handleLogout();
-        showNotification('Lỗi khi xóa ảnh', 'error');
+        setConfirmModal(prev => ({ ...prev, isOpen: false }));
       }
-    } catch (err) {
-      showNotification('Lỗi kết nối mạng', 'error');
-    }
+    });
   };
 
   const handleAddReview = async () => {
@@ -238,28 +276,35 @@ export default function Admin() {
   };
 
   const handleDeleteReview = async (id: number) => {
-    if (!confirm('Bạn có chắc muốn xóa đánh giá này?')) return;
-    try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`/api/admin/reviews/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
+    setConfirmModal({
+      isOpen: true,
+      title: 'Xác nhận xóa',
+      message: 'Bạn có chắc muốn xóa đánh giá này?',
+      onConfirm: async () => {
+        try {
+          const token = localStorage.getItem('token');
+          const res = await fetch(`/api/admin/reviews/${id}`, {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          if (res.ok) {
+            setData((prev: any) => ({
+              ...prev,
+              reviews: prev.reviews.filter((r: any) => r.id !== id)
+            }));
+            showNotification('Đã xóa đánh giá', 'success');
+          } else {
+            if (res.status === 401) return handleLogout();
+            showNotification('Lỗi khi xóa đánh giá', 'error');
+          }
+        } catch (err) {
+          showNotification('Lỗi kết nối mạng', 'error');
         }
-      });
-      if (res.ok) {
-        setData((prev: any) => ({
-          ...prev,
-          reviews: prev.reviews.filter((r: any) => r.id !== id)
-        }));
-        showNotification('Đã xóa đánh giá', 'success');
-      } else {
-        if (res.status === 401) return handleLogout();
-        showNotification('Lỗi khi xóa đánh giá', 'error');
+        setConfirmModal(prev => ({ ...prev, isOpen: false }));
       }
-    } catch (err) {
-      showNotification('Lỗi kết nối mạng', 'error');
-    }
+    });
   };
 
   const handleReviewAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -288,6 +333,64 @@ export default function Admin() {
     }
   };
 
+  const handleSaveRental = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const token = localStorage.getItem('token');
+      const method = editingRental.id ? 'PUT' : 'POST';
+      const url = editingRental.id ? `/api/admin/rentals/${editingRental.id}` : '/api/admin/rentals';
+      
+      const res = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(editingRental)
+      });
+      
+      if (res.ok) {
+        showNotification(editingRental.id ? 'Cập nhật thành công!' : 'Thêm mới thành công!', 'success');
+        fetchRentals();
+        setIsRentalModalOpen(false);
+      } else {
+        if (res.status === 401) return handleLogout();
+        showNotification('Lỗi khi lưu thông tin', 'error');
+      }
+    } catch (err) {
+      showNotification('Lỗi kết nối mạng', 'error');
+    }
+  };
+
+  const handleDeleteRental = async (id: number) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Xác nhận xóa',
+      message: 'Bạn có chắc muốn xóa thông tin thuê xe này?',
+      onConfirm: async () => {
+        try {
+          const token = localStorage.getItem('token');
+          const res = await fetch(`/api/admin/rentals/${id}`, {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          if (res.ok) {
+            setRentals(prev => prev.filter(r => r.id !== id));
+            showNotification('Đã xóa thông tin', 'success');
+          } else {
+            if (res.status === 401) return handleLogout();
+            showNotification('Lỗi khi xóa thông tin', 'error');
+          }
+        } catch (err) {
+          showNotification('Lỗi kết nối mạng', 'error');
+        }
+        setConfirmModal(prev => ({ ...prev, isOpen: false }));
+      }
+    });
+  };
+
   if (loading) return <div className="p-8">Loading...</div>;
   if (!data) return <div className="p-8">Error loading data</div>;
 
@@ -300,6 +403,7 @@ export default function Admin() {
     { id: 'contact', label: 'Liên hệ' },
     { id: 'gallery', label: 'Gallery' },
     { id: 'reviews', label: 'Đánh giá' },
+    { id: 'rentals', label: 'Quản lý thuê xe' },
   ];
 
   return (
@@ -431,6 +535,30 @@ export default function Admin() {
                     onChange={e => handleChange('banner', 'ctaText', e.target.value)}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                   />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Ảnh xe (Hiển thị trên nút CTA)</label>
+                  <div className="flex items-start space-x-4">
+                    {data.banner.carImageUrl ? (
+                      <img src={data.banner.carImageUrl} alt="Car preview" className="w-48 h-32 object-contain rounded-lg border border-gray-200 bg-gray-50 p-2" />
+                    ) : (
+                      <div className="w-48 h-32 rounded-lg border border-dashed border-gray-300 bg-gray-50 flex items-center justify-center text-gray-400 text-sm text-center px-2">Chưa có ảnh xe</div>
+                    )}
+                    <div className="flex-1">
+                      <input
+                        type="text"
+                        value={data.banner.carImageUrl || ''}
+                        onChange={e => handleChange('banner', 'carImageUrl', e.target.value)}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg mb-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        placeholder="URL ảnh xe hoặc tải lên"
+                      />
+                      <label className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 cursor-pointer">
+                        <ImageIcon className="w-4 h-4 mr-2" />
+                        Tải ảnh xe lên
+                        <input type="file" className="hidden" accept="image/*" onChange={e => handleImageUpload(e, 'banner', 'carImageUrl')} />
+                      </label>
+                    </div>
+                  </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Ảnh nền</label>
@@ -776,9 +904,265 @@ export default function Admin() {
                 </div>
               </div>
             )}
+
+            {activeTab === 'rentals' && (
+              <div className="space-y-6">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-bold text-gray-800">Danh sách thuê xe</h3>
+                  <button
+                    onClick={() => {
+                      setEditingRental({
+                        customerName: '',
+                        phoneNumber: '',
+                        idCard: '',
+                        startDate: '',
+                        endDate: '',
+                        totalPrice: 0,
+                        status: 'Chờ xác nhận',
+                        notes: ''
+                      });
+                      setIsRentalModalOpen(true);
+                    }}
+                    className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors"
+                  >
+                    <Plus className="w-5 h-5 mr-2" />
+                    Thêm mới
+                  </button>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="bg-gray-50 border-b border-gray-200">
+                        <th className="px-4 py-3 font-medium text-gray-700">Khách hàng</th>
+                        <th className="px-4 py-3 font-medium text-gray-700">Liên hệ</th>
+                        <th className="px-4 py-3 font-medium text-gray-700">Thời gian thuê</th>
+                        <th className="px-4 py-3 font-medium text-gray-700">Tổng tiền</th>
+                        <th className="px-4 py-3 font-medium text-gray-700">Trạng thái</th>
+                        <th className="px-4 py-3 font-medium text-gray-700 text-right">Thao tác</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {rentals.length === 0 ? (
+                        <tr>
+                          <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
+                            Chưa có dữ liệu thuê xe
+                          </td>
+                        </tr>
+                      ) : (
+                        rentals.map((rental) => (
+                          <tr key={rental.id} className="border-b border-gray-100 hover:bg-gray-50">
+                            <td className="px-4 py-3">
+                              <div className="font-medium text-gray-800">{rental.customerName}</div>
+                              <div className="text-sm text-gray-500">CCCD: {rental.idCard}</div>
+                            </td>
+                            <td className="px-4 py-3 text-gray-600">{rental.phoneNumber}</td>
+                            <td className="px-4 py-3 text-sm text-gray-600">
+                              <div>Từ: {rental.startDate}</div>
+                              <div>Đến: {rental.endDate}</div>
+                            </td>
+                            <td className="px-4 py-3 font-medium text-indigo-600">
+                              {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(rental.totalPrice)}
+                            </td>
+                            <td className="px-4 py-3">
+                              <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                                rental.status === 'Đã hoàn thành' ? 'bg-green-100 text-green-800' :
+                                rental.status === 'Đang thuê' ? 'bg-blue-100 text-blue-800' :
+                                rental.status === 'Đã hủy' ? 'bg-red-100 text-red-800' :
+                                'bg-yellow-100 text-yellow-800'
+                              }`}>
+                                {rental.status}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-right space-x-2">
+                              <button
+                                onClick={() => {
+                                  setEditingRental(rental);
+                                  setIsRentalModalOpen(true);
+                                }}
+                                className="text-indigo-600 hover:text-indigo-900 text-sm font-medium"
+                              >
+                                Sửa
+                              </button>
+                              <button
+                                onClick={() => handleDeleteRental(rental.id)}
+                                className="text-red-600 hover:text-red-900 text-sm font-medium"
+                              >
+                                Xóa
+                              </button>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
+
+      {/* Rental Modal */}
+      <AnimatePresence>
+        {isRentalModalOpen && editingRental && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]"
+            >
+              <div className="p-6 border-b border-gray-200 flex justify-between items-center bg-gray-50">
+                <h3 className="text-xl font-bold text-gray-800">
+                  {editingRental.id ? 'Sửa thông tin thuê xe' : 'Thêm thông tin thuê xe'}
+                </h3>
+                <button
+                  onClick={() => setIsRentalModalOpen(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <XCircle className="w-6 h-6" />
+                </button>
+              </div>
+              
+              <div className="p-6 overflow-y-auto flex-1">
+                <form id="rental-form" onSubmit={handleSaveRental} className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Tên khách hàng *</label>
+                      <input
+                        type="text"
+                        required
+                        value={editingRental.customerName}
+                        onChange={e => setEditingRental({...editingRental, customerName: e.target.value})}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Số điện thoại *</label>
+                      <input
+                        type="text"
+                        required
+                        value={editingRental.phoneNumber}
+                        onChange={e => setEditingRental({...editingRental, phoneNumber: e.target.value})}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">CCCD/CMND</label>
+                      <input
+                        type="text"
+                        value={editingRental.idCard}
+                        onChange={e => setEditingRental({...editingRental, idCard: e.target.value})}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Trạng thái</label>
+                      <select
+                        value={editingRental.status}
+                        onChange={e => setEditingRental({...editingRental, status: e.target.value})}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                      >
+                        <option value="Chờ xác nhận">Chờ xác nhận</option>
+                        <option value="Đã đặt cọc">Đã đặt cọc</option>
+                        <option value="Đang thuê">Đang thuê</option>
+                        <option value="Đã hoàn thành">Đã hoàn thành</option>
+                        <option value="Đã hủy">Đã hủy</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Ngày nhận xe</label>
+                      <input
+                        type="datetime-local"
+                        value={editingRental.startDate}
+                        onChange={e => setEditingRental({...editingRental, startDate: e.target.value})}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Ngày trả xe</label>
+                      <input
+                        type="datetime-local"
+                        value={editingRental.endDate}
+                        onChange={e => setEditingRental({...editingRental, endDate: e.target.value})}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Tổng tiền (VNĐ)</label>
+                      <input
+                        type="number"
+                        value={editingRental.totalPrice}
+                        onChange={e => setEditingRental({...editingRental, totalPrice: Number(e.target.value)})}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Ghi chú</label>
+                      <textarea
+                        rows={3}
+                        value={editingRental.notes}
+                        onChange={e => setEditingRental({...editingRental, notes: e.target.value})}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                        placeholder="Ghi chú thêm về khách hàng, tiền cọc, yêu cầu đặc biệt..."
+                      />
+                    </div>
+                  </div>
+                </form>
+              </div>
+              
+              <div className="p-6 border-t border-gray-200 bg-gray-50 flex justify-end space-x-3">
+                <button
+                  type="button"
+                  onClick={() => setIsRentalModalOpen(false)}
+                  className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-100 transition-colors"
+                >
+                  Hủy
+                </button>
+                <button
+                  type="submit"
+                  form="rental-form"
+                  className="px-6 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors"
+                >
+                  Lưu thông tin
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {confirmModal.isOpen && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden"
+            >
+              <div className="p-6">
+                <h3 className="text-xl font-bold text-gray-900 mb-2">{confirmModal.title}</h3>
+                <p className="text-gray-600 mb-6">{confirmModal.message}</p>
+                <div className="flex justify-end space-x-3">
+                  <button
+                    onClick={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+                    className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-100 transition-colors"
+                  >
+                    Hủy
+                  </button>
+                  <button
+                    onClick={confirmModal.onConfirm}
+                    className="px-4 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors"
+                  >
+                    Xóa
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

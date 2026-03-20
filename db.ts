@@ -31,6 +31,19 @@ db.exec(`
     comment TEXT,
     avatarUrl TEXT
   );
+
+  CREATE TABLE IF NOT EXISTS rentals (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    customerName TEXT,
+    phoneNumber TEXT,
+    idCard TEXT,
+    startDate TEXT,
+    endDate TEXT,
+    totalPrice INTEGER,
+    status TEXT,
+    notes TEXT,
+    createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
 `);
 
 // Insert default admin if not exists

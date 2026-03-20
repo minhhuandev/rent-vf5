@@ -97,6 +97,22 @@ export default function Home() {
               {banner?.subtitle || 'Trải nghiệm xe điện gia đình êm ái, tiết kiệm'}
             </p>
             
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6, duration: 0.8 }}
+              className="flex justify-center mb-8 md:mb-12"
+            >
+              <img 
+                src={banner?.carImageUrl || "https://vinfast-haiphong.com.vn/wp-content/uploads/2023/04/vinfast-vf5-plus-mau-xanh-blue.png"} 
+                alt="VinFast VF5 Plus" 
+                className="w-full max-w-[280px] sm:max-w-[380px] md:max-w-[480px] object-contain drop-shadow-[0_20px_30px_rgba(0,0,0,0.5)] hover:scale-105 transition-transform duration-500"
+                onError={(e) => {
+                  e.currentTarget.src = "https://vinfasthadong.com.vn/wp-content/uploads/2022/12/vf5-plus-mau-xanh-blue.png";
+                }}
+              />
+            </motion.div>
+            
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <a 
                 href={`tel:${contact?.phone}`}
@@ -332,6 +348,22 @@ export default function Home() {
           <div className="relative z-10">
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 md:mb-6 tracking-tight">Sẵn Sàng Khởi Hành?</h2>
             <p className="text-base sm:text-lg md:text-xl text-blue-100 mb-8 md:mb-12 max-w-2xl mx-auto font-light">Liên hệ ngay hôm nay để nhận tư vấn và đặt xe nhanh chóng với mức giá ưu đãi nhất.</p>
+            
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              className="flex justify-center mb-8 md:mb-10"
+            >
+              <img 
+                src={banner?.carImageUrl || "https://vinfast-haiphong.com.vn/wp-content/uploads/2023/04/vinfast-vf5-plus-mau-xanh-blue.png"} 
+                alt="VinFast VF5 Plus" 
+                className="w-full max-w-[250px] sm:max-w-[350px] md:max-w-[450px] object-contain drop-shadow-[0_20px_30px_rgba(0,0,0,0.3)] hover:scale-105 transition-transform duration-500"
+                onError={(e) => {
+                  e.currentTarget.src = "https://vinfasthadong.com.vn/wp-content/uploads/2022/12/vf5-plus-mau-xanh-blue.png";
+                }}
+              />
+            </motion.div>
             
             <div className="flex flex-col sm:flex-row justify-center items-center gap-4 md:gap-6">
               <a 

@@ -135,9 +135,34 @@ app.delete('/api/admin/reviews/:id', authenticate, (req, res) => {
   res.json({ success: true });
 });
 
+// Rentals API
+app.get('/api/admin/rentals', authenticate, (req, res) => {
+  const rentals = db.prepare('SELECT * FROM rentals ORDER BY createdAt DESC').all();
+  res.json(rentals);
+});
+
+app.post('/api/admin/rentals', authenticate, (req, res) => {
+  const { customerName, phoneNumber, idCard, startDate, endDate, totalPrice, status, notes } = req.body;
+  const info = db.prepare('INSERT INTO rentals (customerName, phoneNumber, idCard, startDate, endDate, totalPrice, status, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?)').run(customerName, phoneNumber, idCard, startDate, endDate, totalPrice, status, notes);
+  res.json({ id: info.lastInsertRowid, customerName, phoneNumber, idCard, startDate, endDate, totalPrice, status, notes });
+});
+
+app.put('/api/admin/rentals/:id', authenticate, (req, res) => {
+  const { id } = req.params;
+  const { customerName, phoneNumber, idCard, startDate, endDate, totalPrice, status, notes } = req.body;
+  db.prepare('UPDATE rentals SET customerName = ?, phoneNumber = ?, idCard = ?, startDate = ?, endDate = ?, totalPrice = ?, status = ?, notes = ? WHERE id = ?').run(customerName, phoneNumber, idCard, startDate, endDate, totalPrice, status, notes, id);
+  res.json({ success: true });
+});
+
+app.delete('/api/admin/rentals/:id', authenticate, (req, res) => {
+  const { id } = req.params;
+  db.prepare('DELETE FROM rentals WHERE id = ?').run(id);
+  res.json({ success: true });
+});
+
 async function startServer() {
   // cPanel Passenger sẽ tự động truyền port qua process.env.PORT
-  const PORT = process.env.PORT || 3000;
+  const PORT = Number(process.env.PORT) || 3000;
   const distPath = path.join(process.cwd(), 'dist');
 
   if (fs.existsSync(path.join(distPath, 'index.html'))) {
