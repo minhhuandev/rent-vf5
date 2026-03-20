@@ -81,19 +81,19 @@ export default function Home() {
           <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/20 to-[#FAFAFA]" />
         </motion.div>
         
-        <div className="relative z-10 text-center px-6 max-w-5xl mx-auto mt-20">
+        <div className="relative z-10 text-center px-6 max-w-5xl mx-auto mt-16 md:mt-12">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
           >
-            <span className="inline-block py-1.5 px-4 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white text-sm font-medium mb-6 tracking-wide uppercase">
+            <span className="inline-block py-1.5 px-4 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white text-sm font-medium mb-4 md:mb-6 tracking-wide uppercase">
               Trải nghiệm xe điện thông minh
             </span>
-            <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-bold text-white mb-4 md:mb-6 tracking-tighter leading-[1.1]">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-4 tracking-tighter leading-[1.1]">
               {banner?.title || 'Cho Thuê Xe VinFast VF5'}
             </h1>
-            <p className="text-lg sm:text-xl md:text-2xl text-gray-300 mb-8 md:mb-10 max-w-2xl mx-auto font-light">
+            <p className="text-lg sm:text-xl md:text-2xl text-gray-300 mb-6 md:mb-8 max-w-2xl mx-auto font-light">
               {banner?.subtitle || 'Trải nghiệm xe điện gia đình êm ái, tiết kiệm'}
             </p>
             
@@ -101,12 +101,12 @@ export default function Home() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6, duration: 0.8 }}
-              className="flex justify-center mb-8 md:mb-12"
+              className="flex justify-center mb-6 md:mb-8"
             >
               <img 
                 src={banner?.carImageUrl || "https://vinfast-haiphong.com.vn/wp-content/uploads/2023/04/vinfast-vf5-plus-mau-xanh-blue.png"} 
                 alt="VinFast VF5 Plus" 
-                className="w-full max-w-[280px] sm:max-w-[380px] md:max-w-[480px] object-contain drop-shadow-[0_20px_30px_rgba(0,0,0,0.5)] hover:scale-105 transition-transform duration-500"
+                className="w-full max-w-[280px] sm:max-w-[350px] md:max-w-[400px] lg:max-w-[420px] object-contain drop-shadow-[0_20px_30px_rgba(0,0,0,0.5)] hover:scale-105 transition-transform duration-500"
                 onError={(e) => {
                   e.currentTarget.src = "https://vinfasthadong.com.vn/wp-content/uploads/2022/12/vf5-plus-mau-xanh-blue.png";
                 }}
@@ -353,12 +353,12 @@ export default function Home() {
               initial={{ opacity: 0, scale: 0.9 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
-              className="flex justify-center mb-8 md:mb-10"
+              className="flex justify-center mb-6 md:mb-8"
             >
               <img 
                 src={banner?.carImageUrl || "https://vinfast-haiphong.com.vn/wp-content/uploads/2023/04/vinfast-vf5-plus-mau-xanh-blue.png"} 
                 alt="VinFast VF5 Plus" 
-                className="w-full max-w-[250px] sm:max-w-[350px] md:max-w-[450px] object-contain drop-shadow-[0_20px_30px_rgba(0,0,0,0.3)] hover:scale-105 transition-transform duration-500"
+                className="w-full max-w-[250px] sm:max-w-[320px] md:max-w-[380px] lg:max-w-[400px] object-contain drop-shadow-[0_20px_30px_rgba(0,0,0,0.3)] hover:scale-105 transition-transform duration-500"
                 onError={(e) => {
                   e.currentTarget.src = "https://vinfasthadong.com.vn/wp-content/uploads/2022/12/vf5-plus-mau-xanh-blue.png";
                 }}
