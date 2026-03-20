@@ -56,7 +56,8 @@ app.get('/api/public-data', (req, res) => {
   }, {} as any);
 
   const gallery = db.prepare('SELECT * FROM gallery').all();
-  res.json({ ...content, gallery });
+  const reviews = db.prepare('SELECT * FROM reviews').all();
+  res.json({ ...content, gallery, reviews });
 });
 
 app.post('/api/admin/login', (req, res) => {
@@ -111,22 +112,41 @@ app.delete('/api/admin/gallery/:id', authenticate, (req, res) => {
   res.json({ success: true });
 });
 
+app.post('/api/admin/reviews', authenticate, (req, res) => {
+  const { customerName, rating, comment, avatarUrl } = req.body;
+  const info = db.prepare('INSERT INTO reviews (customerName, rating, comment, avatarUrl) VALUES (?, ?, ?, ?)').run(customerName, rating, comment, avatarUrl);
+  res.json({ id: info.lastInsertRowid, customerName, rating, comment, avatarUrl });
+});
+
+app.put('/api/admin/reviews/:id', authenticate, (req, res) => {
+  const { id } = req.params;
+  const { customerName, rating, comment, avatarUrl } = req.body;
+  db.prepare('UPDATE reviews SET customerName = ?, rating = ?, comment = ?, avatarUrl = ? WHERE id = ?').run(customerName, rating, comment, avatarUrl, id);
+  res.json({ success: true });
+});
+
+app.delete('/api/admin/reviews/:id', authenticate, (req, res) => {
+  const { id } = req.params;
+  db.prepare('DELETE FROM reviews WHERE id = ?').run(id);
+  res.json({ success: true });
+});
+
 async function startServer() {
   // cPanel Passenger sẽ tự động truyền port qua process.env.PORT
   const PORT = process.env.PORT || 3000;
+  const distPath = path.join(process.cwd(), 'dist');
 
-  if (process.env.NODE_ENV !== 'production') {
+  if (fs.existsSync(path.join(distPath, 'index.html'))) {
+    app.use(express.static(distPath));
+    app.get('*', (req, res) => {
+      res.sendFile(path.join(distPath, 'index.html'));
+    });
+  } else {
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: 'spa',
     });
     app.use(vite.middlewares);
-  } else {
-    const distPath = path.join(process.cwd(), 'dist');
-    app.use(express.static(distPath));
-    app.get('*', (req, res) => {
-      res.sendFile(path.join(distPath, 'index.html'));
-    });
   }
 
   app.listen(PORT, '0.0.0.0', () => {

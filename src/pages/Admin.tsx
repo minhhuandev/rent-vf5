@@ -9,6 +9,7 @@ export default function Admin() {
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('banner');
   const [notification, setNotification] = useState<{message: string, type: 'success' | 'error'} | null>(null);
+  const [newReview, setNewReview] = useState({ customerName: '', rating: 5, comment: '', avatarUrl: '' });
   const navigate = useNavigate();
 
   const showNotification = (message: string, type: 'success' | 'error' = 'success') => {
@@ -60,7 +61,7 @@ export default function Admin() {
     setSaving(true);
     try {
       const token = localStorage.getItem('token');
-      const { gallery, ...contentToSave } = data;
+      const { gallery, reviews, ...contentToSave } = data;
       
       const res = await fetch('/api/admin/content', {
         method: 'PUT',
@@ -188,6 +189,87 @@ export default function Admin() {
     }
   };
 
+  const handleAddReview = async () => {
+    if (!newReview.customerName || !newReview.comment) {
+      showNotification('Vui lòng nhập tên và nội dung đánh giá', 'error');
+      return;
+    }
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch('/api/admin/reviews', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(newReview)
+      });
+      
+      if (res.ok) {
+        const addedReview = await res.json();
+        setData((prev: any) => ({
+          ...prev,
+          reviews: [...(prev.reviews || []), addedReview]
+        }));
+        setNewReview({ customerName: '', rating: 5, comment: '', avatarUrl: '' });
+        showNotification('Thêm đánh giá thành công!', 'success');
+      } else {
+        showNotification('Lỗi khi thêm đánh giá', 'error');
+      }
+    } catch (err) {
+      showNotification('Lỗi kết nối mạng', 'error');
+    }
+  };
+
+  const handleDeleteReview = async (id: number) => {
+    if (!confirm('Bạn có chắc muốn xóa đánh giá này?')) return;
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`/api/admin/reviews/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (res.ok) {
+        setData((prev: any) => ({
+          ...prev,
+          reviews: prev.reviews.filter((r: any) => r.id !== id)
+        }));
+        showNotification('Đã xóa đánh giá', 'success');
+      } else {
+        showNotification('Lỗi khi xóa đánh giá', 'error');
+      }
+    } catch (err) {
+      showNotification('Lỗi kết nối mạng', 'error');
+    }
+  };
+
+  const handleReviewAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    const file = e.target.files[0];
+    const formData = new FormData();
+    formData.append('image', file);
+    
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch('/api/admin/upload-image', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formData
+      });
+      if (res.ok) {
+        const { url } = await res.json();
+        setNewReview(prev => ({ ...prev, avatarUrl: url }));
+        showNotification('Tải ảnh đại diện thành công!', 'success');
+      } else {
+        showNotification('Lỗi khi tải ảnh lên', 'error');
+      }
+    } catch (err) {
+      showNotification('Lỗi kết nối mạng', 'error');
+    }
+  };
+
   if (loading) return <div className="p-8">Loading...</div>;
   if (!data) return <div className="p-8">Error loading data</div>;
 
@@ -199,6 +281,7 @@ export default function Admin() {
     { id: 'pricing', label: 'Bảng giá' },
     { id: 'contact', label: 'Liên hệ' },
     { id: 'gallery', label: 'Gallery' },
+    { id: 'reviews', label: 'Đánh giá' },
   ];
 
   return (
@@ -265,7 +348,7 @@ export default function Admin() {
             <h2 className="text-2xl font-bold text-gray-800">
               {tabs.find(t => t.id === activeTab)?.label}
             </h2>
-            {activeTab !== 'gallery' && (
+            {activeTab !== 'gallery' && activeTab !== 'reviews' && (
               <button
                 onClick={handleSave}
                 disabled={saving}
@@ -564,6 +647,112 @@ export default function Admin() {
                   {data.gallery.length === 0 && (
                     <div className="col-span-full py-12 text-center text-gray-500 bg-gray-50 rounded-xl border border-dashed border-gray-300">
                       Chưa có hình ảnh nào trong thư viện
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'reviews' && (
+              <div className="space-y-8">
+                {/* Add New Review Form */}
+                <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm space-y-4">
+                  <h3 className="text-lg font-bold text-gray-800 border-b pb-2">Thêm đánh giá mới</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Tên khách hàng</label>
+                      <input
+                        type="text"
+                        value={newReview.customerName}
+                        onChange={e => setNewReview({ ...newReview, customerName: e.target.value })}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                        placeholder="VD: Nguyễn Văn A"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Đánh giá (Số sao)</label>
+                      <select
+                        value={newReview.rating}
+                        onChange={e => setNewReview({ ...newReview, rating: Number(e.target.value) })}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                      >
+                        <option value={5}>5 Sao</option>
+                        <option value={4}>4 Sao</option>
+                        <option value={3}>3 Sao</option>
+                        <option value={2}>2 Sao</option>
+                        <option value={1}>1 Sao</option>
+                      </select>
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Nội dung đánh giá</label>
+                      <textarea
+                        rows={3}
+                        value={newReview.comment}
+                        onChange={e => setNewReview({ ...newReview, comment: e.target.value })}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                        placeholder="Nhận xét của khách hàng..."
+                      />
+                    </div>
+                    <div className="md:col-span-2 flex items-center space-x-4">
+                      {newReview.avatarUrl ? (
+                        <img src={newReview.avatarUrl} alt="Avatar" className="w-12 h-12 rounded-full object-cover border" />
+                      ) : (
+                        <div className="w-12 h-12 rounded-full bg-gray-100 border flex items-center justify-center text-xs text-gray-400">Trống</div>
+                      )}
+                      <label className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 cursor-pointer">
+                        <ImageIcon className="w-4 h-4 mr-2" />
+                        Tải ảnh đại diện
+                        <input type="file" className="hidden" accept="image/*" onChange={handleReviewAvatarUpload} />
+                      </label>
+                    </div>
+                  </div>
+                  <div className="flex justify-end pt-2">
+                    <button
+                      onClick={handleAddReview}
+                      className="flex items-center px-6 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors"
+                    >
+                      <Plus className="w-5 h-5 mr-2" />
+                      Thêm đánh giá
+                    </button>
+                  </div>
+                </div>
+
+                {/* List of Reviews */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-bold text-gray-800">Danh sách đánh giá</h3>
+                  {(!data.reviews || data.reviews.length === 0) ? (
+                    <div className="py-8 text-center text-gray-500 bg-gray-50 rounded-xl border border-dashed border-gray-300">
+                      Chưa có đánh giá nào
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {data.reviews.map((review: any) => (
+                        <div key={review.id} className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm relative group">
+                          <button
+                            onClick={() => handleDeleteReview(review.id)}
+                            className="absolute top-4 right-4 text-gray-400 hover:text-red-600 transition-colors"
+                            title="Xóa đánh giá"
+                          >
+                            <Trash2 className="w-5 h-5" />
+                          </button>
+                          <div className="flex items-center space-x-3 mb-3">
+                            {review.avatarUrl ? (
+                              <img src={review.avatarUrl} alt={review.customerName} className="w-10 h-10 rounded-full object-cover" />
+                            ) : (
+                              <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold">
+                                {review.customerName.charAt(0)}
+                              </div>
+                            )}
+                            <div>
+                              <h4 className="font-bold text-gray-800">{review.customerName}</h4>
+                              <div className="flex text-yellow-400 text-sm">
+                                {'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}
+                              </div>
+                            </div>
+                          </div>
+                          <p className="text-gray-600 text-sm italic">"{review.comment}"</p>
+                        </div>
+                      ))}
                     </div>
                   )}
                 </div>

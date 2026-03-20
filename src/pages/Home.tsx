@@ -211,32 +211,73 @@ export default function Home() {
         </section>
       )}
 
+      {/* Reviews */}
+      {data.reviews && data.reviews.length > 0 && (
+        <section className="py-20 bg-gray-50 px-4">
+          <div className="max-w-6xl mx-auto">
+            <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">Khách Hàng Nói Gì Về Chúng Tôi</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {data.reviews.map((review: any, idx: number) => (
+                <motion.div 
+                  key={review.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: idx * 0.1 }}
+                  className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow"
+                >
+                  <div className="flex text-yellow-400 mb-4">
+                    {'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}
+                  </div>
+                  <p className="text-gray-600 italic mb-6 leading-relaxed">"{review.comment}"</p>
+                  <div className="flex items-center space-x-4">
+                    {review.avatarUrl ? (
+                      <img src={review.avatarUrl} alt={review.customerName} className="w-12 h-12 rounded-full object-cover" />
+                    ) : (
+                      <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-lg">
+                        {review.customerName.charAt(0)}
+                      </div>
+                    )}
+                    <div>
+                      <h4 className="font-bold text-gray-900">{review.customerName}</h4>
+                      <p className="text-sm text-gray-500">Khách hàng thuê xe</p>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Contact Section */}
-      <section className="py-20 px-4 max-w-4xl mx-auto text-center">
-        <h2 className="text-3xl font-bold text-gray-900 mb-12">Liên Hệ Đặt Xe</h2>
-        <div className="flex flex-col md:flex-row justify-center gap-8">
-          <div className="flex items-center justify-center p-6 bg-white rounded-2xl shadow-sm border border-gray-100">
-            <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mr-4">
-              <Phone className="w-6 h-6" />
+      <section className="py-20 bg-white px-4">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-3xl font-bold text-gray-900 mb-12">Liên Hệ Đặt Xe</h2>
+          <div className="flex flex-col md:flex-row justify-center gap-8">
+            <div className="flex items-center justify-center p-6 bg-gray-50 rounded-2xl shadow-sm border border-gray-100">
+              <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mr-4">
+                <Phone className="w-6 h-6" />
+              </div>
+              <div className="text-left">
+                <p className="text-sm text-gray-500">Hotline</p>
+                <p className="text-lg font-bold text-gray-900">{contact?.phone}</p>
+              </div>
             </div>
-            <div className="text-left">
-              <p className="text-sm text-gray-500">Hotline</p>
-              <p className="text-lg font-bold text-gray-900">{contact?.phone}</p>
+            <div className="flex items-center justify-center p-6 bg-gray-50 rounded-2xl shadow-sm border border-gray-100">
+              <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mr-4">
+                <MessageCircle className="w-6 h-6" />
+              </div>
+              <div className="text-left">
+                <p className="text-sm text-gray-500">Zalo</p>
+                <p className="text-lg font-bold text-gray-900">{contact?.zalo}</p>
+              </div>
             </div>
           </div>
-          <div className="flex items-center justify-center p-6 bg-white rounded-2xl shadow-sm border border-gray-100">
-            <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mr-4">
-              <MessageCircle className="w-6 h-6" />
-            </div>
-            <div className="text-left">
-              <p className="text-sm text-gray-500">Zalo</p>
-              <p className="text-lg font-bold text-gray-900">{contact?.zalo}</p>
-            </div>
+          <div className="mt-8 flex items-center justify-center text-gray-600">
+            <MapPin className="w-5 h-5 mr-2" />
+            {contact?.address}
           </div>
-        </div>
-        <div className="mt-8 flex items-center justify-center text-gray-600">
-          <MapPin className="w-5 h-5 mr-2" />
-          {contact?.address}
         </div>
       </section>
 

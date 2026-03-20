@@ -23,6 +23,14 @@ db.exec(`
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     url TEXT
   );
+
+  CREATE TABLE IF NOT EXISTS reviews (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    customerName TEXT,
+    rating INTEGER,
+    comment TEXT,
+    avatarUrl TEXT
+  );
 `);
 
 // Insert default admin if not exists
